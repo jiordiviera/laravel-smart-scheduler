@@ -1,0 +1,46 @@
+/.env
+/.env.*
+/vendor/
+/node_modules/
+/coverage/
+/build/
+/tests/_output/
+.phpunit.result.cache
+
+# Composer
+composer.phar
+composer.lock
+
+# Laravel specific
+/public/storage
+/storage/*.key
+/.idea
+
+# Logs and databases
+*.log
+*.sql
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+/.idea/
+*.iml
+
+# PHPStorm
+# ignore caches, metadata
+/.phpstorm.meta.php
+
+# PHPUnit
+phpunit.xml
+phpunit.xml.dist
+
+# Misc
+*.seed
+*.cache
+*.tmp
+
+# Ignore built PHARs
+*.phar

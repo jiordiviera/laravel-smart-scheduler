@@ -1,0 +1,36 @@
+{
+    "name": "jiordiviera/laravel-smart-scheduler",
+    "description": "Smarter, observable tasSmarter, observable task scheduling for Laravel.",
+    "type": "library",
+    "version": "1.0.0",
+    "require": {
+        "illuminate/support": "^12.36",
+        "illuminate/console": "^12.36",
+        "illuminate/database": "^12.36",
+        "illuminate/notifications": "^12.36"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.1",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "orchestra/testbench": "^10.6"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Jiordiviera\\SmartScheduler\\LaravelSmartScheduler\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "jiordiviera",
+            "email": "jiordikengne@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
