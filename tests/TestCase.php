@@ -18,6 +18,11 @@ abstract class TestCase extends BaseTestCase
         "database"=> ":memory:",
         "prefix"=> "",
         ]);
+
+        // Provide a default route for basic feature tests that hit '/'
+        $app['router']->get('/', function () {
+            return response('OK');
+        });
     }
 
     protected function defineDatabaseMigrations(): void{

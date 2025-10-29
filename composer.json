@@ -20,6 +20,11 @@
             "Jiordiviera\\SmartScheduler\\LaravelSmartScheduler\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "jiordiviera",
