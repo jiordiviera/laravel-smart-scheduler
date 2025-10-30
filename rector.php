@@ -15,13 +15,13 @@ return static function (RectorConfig $rectorConfig): void {
 
     // Process src and tests
     $rectorConfig->paths([
-        __DIR__ . '/src',
-        __DIR__ . '/tests',
+        __DIR__.'/src',
+        __DIR__.'/tests',
     ]);
 
     // Ignore vendor and storage
     $rectorConfig->skip([
-        __DIR__ . '/vendor',
-        __DIR__ . '/storage',
+        __DIR__.'/vendor',
+        __DIR__.'/storage',
     ]);
 };

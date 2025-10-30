@@ -17,7 +17,6 @@ return new class extends Migration
             $table->timestamp('ended_at')->nullable();
             $table->integer('duration_ms')->nullable();
             $table->text('error_message')->nullable();
-            
             $table->string('hash', 36)->nullable()->index();
             $table->timestamps();
         });
