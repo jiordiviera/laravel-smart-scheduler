@@ -44,11 +44,19 @@ it('sends notifications when schedule run fails', function () {
     Http::assertSentCount(2);
 
     Http::assertSent(function ($request) {
-        return str_contains($request->url(), 'https://hooks.slack.com/services');
+        $text = $request->data()['text'] ?? '';
+
+        return str_contains($request->url(), 'https://hooks.slack.com/services')
+            && str_contains($text, 'Environment: testing')
+            && str_contains($text, 'Host:');
     });
 
     Http::assertSent(function ($request) {
-        return str_contains($request->url(), 'https://api.telegram.org/bot');
+        $text = $request->data()['text'] ?? '';
+
+        return str_contains($request->url(), 'https://api.telegram.org/bot')
+            && str_contains($text, 'Environment: testing')
+            && str_contains($text, 'Host:');
     });
 });
 

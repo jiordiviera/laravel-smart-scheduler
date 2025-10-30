@@ -3,6 +3,10 @@
 namespace Jiordiviera\SmartScheduler\LaravelSmartScheduler;
 
 use Illuminate\Support\ServiceProvider;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Notifications\Channels\MailNotificationChannel;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Notifications\Channels\SlackWebhookNotificationChannel;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Notifications\Channels\TelegramWebhookNotificationChannel;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\SmartSchedulerNotifier;
 
 /**
  * Class SmartSchedulerServiceProvider
@@ -18,6 +22,14 @@ class SmartSchedulerServiceProvider extends ServiceProvider
     {
         // Merge package configuration
         $this->mergeConfigFrom(__DIR__.'/../config/smart-scheduler.php', 'smart-scheduler');
+
+        $this->app->singleton(SmartSchedulerNotifier::class, function ($app) {
+            return new SmartSchedulerNotifier([
+                $app->make(MailNotificationChannel::class),
+                $app->make(SlackWebhookNotificationChannel::class),
+                $app->make(TelegramWebhookNotificationChannel::class),
+            ]);
+        });
     }
 
     /**
