@@ -11,10 +11,12 @@
 |
 */
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 // Bind the TestCase for the test suite
 uses(TestCase::class)->in(__DIR__);
+uses(RefreshDatabase::class)->in(__DIR__.'/Feature');
 
 /*
 |--------------------------------------------------------------------------
