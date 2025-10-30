@@ -31,7 +31,8 @@
         "pint": "vendor/bin/pint --test",
         "pint:fix": "vendor/bin/pint",
         "rector": "vendor/bin/rector process",
-        "rector:dry": "vendor/bin/rector process --dry-run"
+        "rector:dry": "vendor/bin/rector process --dry-run",
+        "test": "vendor/bin/pest --colors=always"
     },
     "authors": [
         {

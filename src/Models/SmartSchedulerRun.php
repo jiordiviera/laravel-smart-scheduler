@@ -10,6 +10,11 @@ class SmartSchedulerRun extends Model
 {
     use HasFactory;
 
+    public const STATUS_RUNNING = 'running';
+    public const STATUS_SUCCESS = 'success';
+    public const STATUS_FAILED = 'failed';
+    public const STATUS_SKIPPED = 'skipped';
+
     protected $table = 'smart_scheduler_runs';
 
     protected $guarded = [];
