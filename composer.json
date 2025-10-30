@@ -12,7 +12,9 @@
     "require-dev": {
         "pestphp/pest": "^4.1",
         "pestphp/pest-plugin-laravel": "^4.0",
-        "orchestra/testbench": "^10.6"
+        "orchestra/testbench": "^10.6",
+        "laravel/pint": "^1.25",
+        "rector/rector": "^2.2"
     },
     "license": "MIT",
     "autoload": {
@@ -20,10 +22,22 @@
             "Jiordiviera\\SmartScheduler\\LaravelSmartScheduler\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "pint": "vendor/bin/pint --test",
+        "pint:fix": "vendor/bin/pint",
+        "rector": "vendor/bin/rector process",
+        "rector:dry": "vendor/bin/rector process --dry-run"
+    },
     "authors": [
         {
             "name": "jiordiviera",
-            "email": "jiordikengne@gmail.com"
+            "email": "jiordikengne@gmail.com",
+            "role": "owner"
         }
     ],
     "minimum-stability": "stable",

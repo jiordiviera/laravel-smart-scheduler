@@ -44,3 +44,6 @@ phpunit.xml.dist
 
 # Ignore built PHARs
 *.phar
+
+# Local specification / notes
+docs/feature.md

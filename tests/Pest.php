@@ -13,9 +13,8 @@
 
 use Tests\TestCase;
 
-pest()->extend(Tests\TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Feature');
+// Bind the TestCase for the test suite
+uses(TestCase::class)->in(__DIR__);
 
 /*
 |--------------------------------------------------------------------------
@@ -47,5 +46,3 @@ function something()
 {
     // ..
 }
-
-uses(TestCase::class)->in(__DIR__);

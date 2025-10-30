@@ -9,7 +9,7 @@
 **Laravel Smart Scheduler** enhances Laravel’s built-in scheduler by adding real-time visibility, failure detection, and smart execution handling.
 No more silent cron failures — every scheduled task is tracked, logged, and optionally reported via notifications.
 
-This package was created as part of the **#100DaysOfCode Challenge (Day 37)** by [Jiordi Viera](https://jiordiviera.me).
+This package was created as part of the **#100DaysOfCode Challenge (Day 38)** by [Jiordi Viera](https://jiordiviera.me).
 
 ---
 
