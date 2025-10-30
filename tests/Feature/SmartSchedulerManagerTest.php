@@ -1,0 +1,135 @@
+<?php
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Services\SchedulerRunOutcome;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Services\SmartSchedulerManager;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\SmartSchedulerNotifier;
+
+beforeEach(function () {
+    // Default commands used by the manager during tests
+    Artisan::command('smart-scheduler:success-run', fn () => Command::SUCCESS)
+        ->purpose('Simulated successful scheduler command');
+
+    Artisan::command('smart-scheduler:failure-run', function () {
+        return Command::FAILURE;
+    })->purpose('Simulated failing scheduler command');
+
+    config()->set('smart-scheduler.notifications.enabled', false);
+});
+
+it('marks a scheduler run as success when wrapped command succeeds', function () {
+    config()->set('smart-scheduler.wrapped_command', 'smart-scheduler:success-run');
+
+    /** @var SmartSchedulerManager $manager */
+    $manager = app(SmartSchedulerManager::class);
+
+    $outcome = $manager->execute();
+
+    expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_SUCCESS);
+    expect($outcome->exitCode())->toBe(Command::SUCCESS);
+    expect($outcome->run())->not->toBeNull();
+
+    $run = $outcome->run();
+
+    expect($run->status)->toBe(SmartSchedulerRun::STATUS_SUCCESS);
+    expect($run->ended_at)->not->toBeNull();
+    expect($run->duration_ms)->toBeGreaterThanOrEqual(0);
+});
+
+it('returns native outcome when smart scheduler is disabled', function () {
+    config()->set('smart-scheduler.enabled', false);
+    config()->set('smart-scheduler.wrapped_command', 'smart-scheduler:failure-run');
+
+    /** @var SmartSchedulerManager $manager */
+    $manager = app(SmartSchedulerManager::class);
+
+    $outcome = $manager->execute();
+
+    expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_NATIVE);
+    expect($outcome->exitCode())->toBe(Command::FAILURE);
+    expect($outcome->run())->toBeNull();
+    expect(SmartSchedulerRun::count())->toBe(0);
+});
+
+it('skips execution when another run is already marked as running', function () {
+    config()->set('smart-scheduler.wrapped_command', 'smart-scheduler:success-run');
+
+    $activeRun = SmartSchedulerRun::create([
+        'command' => 'smart-scheduler:success-run',
+        'status' => SmartSchedulerRun::STATUS_RUNNING,
+        'started_at' => now(),
+    ]);
+
+    /** @var SmartSchedulerManager $manager */
+    $manager = app(SmartSchedulerManager::class);
+
+    $outcome = $manager->execute();
+
+    expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_SKIPPED);
+    expect($outcome->exitCode())->toBe(Command::SUCCESS);
+    expect($outcome->run())->not->toBeNull();
+
+    $skippedRun = $outcome->run();
+
+    expect($skippedRun->status)->toBe(SmartSchedulerRun::STATUS_SKIPPED);
+    expect($skippedRun->error_message)->toContain($activeRun->id);
+
+    // Original run stays untouched to allow manual intervention
+    expect($activeRun->fresh()->status)->toBe(SmartSchedulerRun::STATUS_RUNNING);
+});
+
+it('marks an overdue run as stuck and triggers notifier', function () {
+    config()->set('smart-scheduler.wrapped_command', 'smart-scheduler:success-run');
+    config()->set('smart-scheduler.notifications.enabled', true);
+    config()->set('smart-scheduler.stuck_after_minutes', 1);
+
+    app()->forgetInstance(SmartSchedulerNotifier::class);
+
+    $notifier = new class() extends SmartSchedulerNotifier {
+        public int $calls = 0;
+        public ?SmartSchedulerRun $lastRun = null;
+        public ?\Throwable $lastException = null;
+
+        public function __construct()
+        {
+            // Parent expects iterable; provide an empty array since we override send logic.
+            parent::__construct([]);
+        }
+
+        public function notifyFailure(SmartSchedulerRun $run, ?\Throwable $exception = null): void
+        {
+            $this->calls++;
+            $this->lastRun = $run;
+            $this->lastException = $exception;
+
+            parent::notifyFailure($run, $exception);
+        }
+    };
+
+    app()->instance(SmartSchedulerNotifier::class, $notifier);
+
+    $staleRun = SmartSchedulerRun::create([
+        'command' => 'smart-scheduler:success-run',
+        'status' => SmartSchedulerRun::STATUS_RUNNING,
+        'started_at' => now()->subMinutes(5),
+    ]);
+
+    /** @var SmartSchedulerManager $manager */
+    $manager = app(SmartSchedulerManager::class);
+
+    $outcome = $manager->execute();
+
+    expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_STUCK);
+    expect($outcome->exitCode())->toBe(Command::FAILURE);
+
+    $failedRun = $outcome->run();
+    expect($failedRun)->not->toBeNull();
+    expect($failedRun->status)->toBe(SmartSchedulerRun::STATUS_FAILED);
+    expect($failedRun->error_message)->toContain('stuck');
+
+    expect($notifier->calls)->toBe(1);
+    expect($notifier->lastRun?->id)->toBe($failedRun->id);
+    expect($notifier->lastException)->not->toBeNull();
+});
