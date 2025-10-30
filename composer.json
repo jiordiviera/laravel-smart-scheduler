@@ -12,7 +12,9 @@
     "require-dev": {
         "pestphp/pest": "^4.1",
         "pestphp/pest-plugin-laravel": "^4.0",
-        "orchestra/testbench": "^10.6"
+        "orchestra/testbench": "^10.6",
+        "laravel/pint": "^1.0",
+        "rector/rector": "^0.14"
     },
     "license": "MIT",
     "autoload": {
@@ -25,10 +27,17 @@
             "Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "pint": "vendor/bin/pint",
+        "pint:fix": "vendor/bin/pint --fix",
+        "rector": "vendor/bin/rector process",
+        "rector:dry": "vendor/bin/rector process --dry-run"
+    },
     "authors": [
         {
             "name": "jiordiviera",
-            "email": "jiordikengne@gmail.com"
+            "email": "jiordikengne@gmail.com",
+            "role": "owner"
         }
     ],
     "minimum-stability": "stable",

@@ -1,0 +1,11 @@
+{
+  "preset": "laravel",
+  "usingCache": true,
+  "exclude": [
+    "vendor",
+    "storage",
+    "node_modules"
+  ],
+  "rules": {
+  }
+}
