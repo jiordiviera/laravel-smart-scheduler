@@ -7,21 +7,15 @@ on:
     branches: [ "main" ]
 
 jobs:
-  pest:
+  package-tests:
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - php: '8.2'
-            laravel: '^10.0'
-          - php: '8.2'
-            laravel: '^11.0'
-          - php: '8.3'
-            laravel: '^12.0'
+        php: [ '8.3' ]
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: Package tests (PHP ${{ matrix.php }})
 
     steps:
       - name: Checkout repository
@@ -40,10 +34,6 @@ jobs:
             --prefer-dist \
             --no-progress \
             --no-interaction \
-            --with="illuminate/support:${{ matrix.laravel }}" \
-            --with="illuminate/console:${{ matrix.laravel }}" \
-            --with="illuminate/database:${{ matrix.laravel }}" \
-            --with="illuminate/notifications:${{ matrix.laravel }}" \
             --with-all-dependencies
 
       - name: Run migrations (Testbench)
@@ -58,3 +48,55 @@ jobs:
 
       - name: Run tests
         run: composer test
+
+  integration:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        laravel: [ '10.*', '11.*', '12.*' ]
+
+    name: Integration (Laravel ${{ matrix.laravel }})
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          extensions: mbstring, tokenizer, sqlite, pdo_sqlite
+
+      - name: Create Laravel application
+        run: composer create-project laravel/laravel:"${{ matrix.laravel }}" test-app --no-interaction
+
+      - name: Configure SQLite database
+        working-directory: test-app
+        run: |
+          touch database/database.sqlite
+          printf "\nDB_CONNECTION=sqlite\nDB_DATABASE=$(pwd)/database/database.sqlite\n" >> .env
+
+      - name: Link local package
+        working-directory: test-app
+        run: |
+          composer config repositories.smart-scheduler '{"type":"path","url":"../"}'
+          composer require jiordiviera/laravel-smart-scheduler:* --dev --no-interaction --no-progress
+
+      - name: Publish assets and migrate
+        working-directory: test-app
+        run: |
+          php artisan vendor:publish --provider="Jiordiviera\SmartScheduler\LaravelSmartScheduler\SmartSchedulerServiceProvider" --tag=config --force
+          php artisan vendor:publish --provider="Jiordiviera\SmartScheduler\LaravelSmartScheduler\SmartSchedulerServiceProvider" --tag=migrations --force
+          php artisan migrate --force
+
+      - name: Run smart scheduler command
+        working-directory: test-app
+        run: php artisan smart-schedule:run
+
+      - name: Assert scheduler run persisted
+        working-directory: test-app
+        run: |
+          php artisan tinker --execute="exit(\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() > 0 ? 0 : 1);"
