@@ -36,11 +36,20 @@ jobs:
             --no-interaction \
             --with-all-dependencies
 
+      - name: Prepare SQLite database
+        run: |
+          touch tests/database.sqlite
+          cat <<EOF > .env.testing
+          APP_ENV=testing
+          DB_CONNECTION=sqlite
+          DB_DATABASE=$(pwd)/tests/database.sqlite
+          EOF
+
       - name: Run migrations (Testbench)
-        run: vendor/bin/testbench migrate --database=testing --path=database/migrations --realpath
+        run: vendor/bin/testbench migrate --database=sqlite --path=database/migrations --realpath --env=testing
 
       - name: Execute smart scheduler wrapper
-        run: vendor/bin/testbench smart-schedule:run
+        run: vendor/bin/testbench smart-schedule:run --env=testing
 
       - name: Assert scheduler run persisted
         run: |
@@ -94,9 +103,9 @@ jobs:
 
       - name: Run smart scheduler command
         working-directory: test-app
-        run: php artisan smart-schedule:run
+        run: php artisan smart-schedule:run --env=testing
 
       - name: Assert scheduler run persisted
         working-directory: test-app
         run: |
-          php artisan tinker --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() === 0) exit(1);"
+          php artisan tinker --env=testing --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() === 0) exit(1);"

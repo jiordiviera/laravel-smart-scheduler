@@ -48,3 +48,4 @@ phpunit.xml.dist
 # Local specification / notes
 docs/feature.md
 AGENTS.md
+tests/database.sqlite
