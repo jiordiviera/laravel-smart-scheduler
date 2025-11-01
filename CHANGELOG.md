@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Adjust illuminate dependencies to support Laravel 10.x, 11.x, and 12.x.
+- Enable package auto-discovery for the SmartScheduler service provider.
 - Add smart retry logic for failed runs.
 - Provide reporting/analytics command (`smart-schedule:report`).
 - Ship optional dashboard for real-time monitoring.

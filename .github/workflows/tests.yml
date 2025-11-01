@@ -85,21 +85,6 @@ jobs:
           composer config repositories.smart-scheduler '{"type":"path","url":"../"}'
           composer require jiordiviera/laravel-smart-scheduler:* --dev --no-interaction --no-progress
 
-      - name: Register Smart Scheduler provider
-        working-directory: test-app
-        run: |
-          python - <<'PY'
-          import re
-          path = 'config/app.php'
-          with open(path, 'r') as fh:
-              config = fh.read()
-          provider = "Jiordiviera\\SmartScheduler\\LaravelSmartScheduler\\SmartSchedulerServiceProvider::class"
-          if provider not in config:
-              config = re.sub(r"'providers'\s*=>\s*\[", "'providers' => [\n        " + provider + ",", config, count=1)
-              with open(path, 'w') as fh:
-                  fh.write(config)
-          PY
-
       - name: Publish assets and migrate
         working-directory: test-app
         run: |
