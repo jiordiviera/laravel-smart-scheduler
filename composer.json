@@ -1,13 +1,13 @@
 {
     "name": "jiordiviera/laravel-smart-scheduler",
-    "description": "Smarter, observable tasSmarter, observable task scheduling for Laravel.",
+    "description": "Observable and reliable task scheduling for Laravel applications.",
     "type": "library",
     "version": "1.0.0",
     "require": {
-        "illuminate/support": "^12.36",
-        "illuminate/console": "^12.36",
-        "illuminate/database": "^12.36",
-        "illuminate/notifications": "^12.36"
+        "illuminate/support": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/console": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/database": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/notifications": "^10.0 || ^11.0 || ^12.0"
     },
     "require-dev": {
         "pestphp/pest": "^4.1",
