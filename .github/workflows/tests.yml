@@ -37,7 +37,7 @@ jobs:
             --with-all-dependencies
 
       - name: Run migrations (Testbench)
-        run: vendor/bin/testbench migrate --database=testing --realpath=database/migrations
+        run: vendor/bin/testbench migrate --database=testing --path=database/migrations --realpath
 
       - name: Execute smart scheduler wrapper
         run: vendor/bin/testbench smart-schedule:run
