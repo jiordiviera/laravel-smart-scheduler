@@ -32,8 +32,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-        extensions: mbstring, tokenizer, sqlite, pdo_sqlite
-        tools: none
+          extensions: mbstring, tokenizer, sqlite, pdo_sqlite
 
       - name: Install dependencies
         run: |
