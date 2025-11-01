@@ -26,6 +26,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database connection
+    |--------------------------------------------------------------------------
+    | Override the connection used to persist smart scheduler runs. Leave null
+    | to rely on the application's default database connection.
+    */
+    'connection' => env('SMART_SCHEDULER_CONNECTION'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Execution safeguards
     |--------------------------------------------------------------------------
     */

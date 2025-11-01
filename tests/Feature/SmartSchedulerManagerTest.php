@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Services\SchedulerRunOutcome;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Services\SmartSchedulerManager;
@@ -132,4 +135,41 @@ it('marks an overdue run as stuck and triggers notifier', function () {
     expect($notifier->calls)->toBe(1);
     expect($notifier->lastRun?->id)->toBe($failedRun->id);
     expect($notifier->lastException)->not->toBeNull();
+});
+
+it('persists runs using the configured database connection', function () {
+    config()->set('database.connections.scheduler_logs', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+        'prefix' => '',
+    ]);
+
+    Schema::connection('scheduler_logs')->dropIfExists('smart_scheduler_runs');
+    Schema::connection('scheduler_logs')->create('smart_scheduler_runs', function (Blueprint $table) {
+        $table->string('id', 36)->primary();
+        $table->string('command')->nullable();
+        $table->string('status')->index();
+        $table->timestamp('started_at')->nullable();
+        $table->timestamp('ended_at')->nullable();
+        $table->integer('duration_ms')->nullable();
+        $table->text('error_message')->nullable();
+        $table->string('hash', 36)->nullable()->index();
+        $table->timestamps();
+    });
+
+    config()->set('smart-scheduler.connection', 'scheduler_logs');
+    config()->set('smart-scheduler.wrapped_command', 'smart-scheduler:success-run');
+
+    /** @var SmartSchedulerManager $manager */
+    $manager = app(SmartSchedulerManager::class);
+    $outcome = $manager->execute();
+
+    expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_SUCCESS);
+    expect($outcome->run())->not->toBeNull();
+    expect($outcome->run()->getConnectionName())->toBe('scheduler_logs');
+
+    expect(DB::connection('scheduler_logs')->table('smart_scheduler_runs')->count())->toBe(1);
+    expect(DB::connection('testing')->table('smart_scheduler_runs')->count())->toBe(0);
+
+    config()->set('smart-scheduler.connection', null);
 });

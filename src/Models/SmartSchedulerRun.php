@@ -53,4 +53,9 @@ class SmartSchedulerRun extends Model
     protected $keyType = 'string';
 
     public $incrementing = false;
+
+    public function getConnectionName()
+    {
+        return config('smart-scheduler.connection') ?: parent::getConnectionName();
+    }
 }
