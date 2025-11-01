@@ -88,7 +88,17 @@ jobs:
       - name: Register Smart Scheduler provider
         working-directory: test-app
         run: |
-          php -r "$path = 'config/app.php'; \$config = file_get_contents(\$path); if (strpos(\$config, 'SmartSchedulerServiceProvider::class') === false) { \$config = preg_replace(\"/'providers'\\s*=>\\s*\\[/\", \"'providers' => [\\n        Jiordiviera\\\\SmartScheduler\\\\LaravelSmartScheduler\\\\SmartSchedulerServiceProvider::class,\", \$config, 1); file_put_contents(\$path, \$config); }"
+          python - <<'PY'
+          import re
+          path = 'config/app.php'
+          with open(path, 'r') as fh:
+              config = fh.read()
+          provider = "Jiordiviera\\SmartScheduler\\LaravelSmartScheduler\\SmartSchedulerServiceProvider::class"
+          if provider not in config:
+              config = re.sub(r"'providers'\s*=>\s*\[", "'providers' => [\n        " + provider + ",", config, count=1)
+              with open(path, 'w') as fh:
+                  fh.write(config)
+          PY
 
       - name: Publish assets and migrate
         working-directory: test-app
