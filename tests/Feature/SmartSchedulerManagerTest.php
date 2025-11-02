@@ -9,6 +9,7 @@ use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Services\SchedulerRunOutcome;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Services\SmartSchedulerManager;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\SmartSchedulerNotifier;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\SmartSchedulerRunWatcher;
 
 beforeEach(function () {
     // Default commands used by the manager during tests
@@ -150,6 +151,27 @@ it('fails with a helpful message when migrations are missing', function () {
     expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_NATIVE);
     expect($outcome->exitCode())->toBe(Command::FAILURE);
     expect($outcome->message())->toContain('migrations');
+});
+
+it('marks run as failed when a scheduled task reports failure without throwing', function () {
+    config()->set('smart-scheduler.wrapped_command', 'smart-scheduler:background-failure');
+
+    Artisan::command('smart-scheduler:background-failure', function () {
+        app(SmartSchedulerRunWatcher::class)->recordFailure(new \RuntimeException('Background failure'));
+    })->purpose('simulate failure callback without throwing');
+
+    /** @var SmartSchedulerManager $manager */
+    $manager = app(SmartSchedulerManager::class);
+
+    $outcome = $manager->execute();
+
+    expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_FAILURE);
+    expect($outcome->exitCode())->toBe(Command::FAILURE);
+    expect($outcome->message())->toContain('Background failure');
+
+    $run = SmartSchedulerRun::first();
+    expect($run->status)->toBe(SmartSchedulerRun::STATUS_FAILED);
+    expect($run->error_message)->toBe('Background failure');
 });
 
 it('persists runs using the configured database connection', function () {

@@ -2,11 +2,14 @@
 
 namespace Jiordiviera\SmartScheduler\LaravelSmartScheduler;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Notifications\Channels\MailNotificationChannel;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Notifications\Channels\SlackWebhookNotificationChannel;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Notifications\Channels\TelegramWebhookNotificationChannel;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\SmartSchedulerNotifier;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\SmartSchedulerRunWatcher;
+use Illuminate\Console\Events\ScheduledTaskFailed;
 
 /**
  * Class SmartSchedulerServiceProvider
@@ -30,6 +33,10 @@ class SmartSchedulerServiceProvider extends ServiceProvider
                 $app->make(TelegramWebhookNotificationChannel::class),
             ]);
         });
+
+        $this->app->singleton(SmartSchedulerRunWatcher::class, function () {
+            return new SmartSchedulerRunWatcher();
+        });
     }
 
     /**
@@ -49,6 +56,10 @@ class SmartSchedulerServiceProvider extends ServiceProvider
                 Commands\SmartScheduleRunCommand::class,
             ]);
         }
+
+        Event::listen(ScheduledTaskFailed::class, function (ScheduledTaskFailed $event) {
+            $this->app->make(SmartSchedulerRunWatcher::class)->recordFailure($event->exception);
+        });
     }
 
     protected function publishAssets(): void

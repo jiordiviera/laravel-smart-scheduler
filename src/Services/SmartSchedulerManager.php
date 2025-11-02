@@ -11,13 +11,14 @@ use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Exceptions\SchedulerRunExec
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Exceptions\SchedulerRunSkippedException;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Exceptions\SchedulerRunStuckException;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun;
-use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\SmartSchedulerNotifier;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Support\{SmartSchedulerNotifier, SmartSchedulerRunWatcher};
 use Throwable;
 
 class SmartSchedulerManager
 {
     public function __construct(
-        protected SmartSchedulerNotifier $notifier
+        protected SmartSchedulerNotifier $notifier,
+        protected SmartSchedulerRunWatcher $watcher
     ) {
     }
 
@@ -50,12 +51,20 @@ class SmartSchedulerManager
         }
 
         $run = $this->createRunRecord($wrappedCommand);
+        $this->watcher->setCurrentRun($run);
 
         try {
             $exitCode = Artisan::call($wrappedCommand);
 
             if ($exitCode !== Command::SUCCESS) {
                 throw new SchedulerRunExecutionException("{$wrappedCommand} exited with status code {$exitCode}", $run, $exitCode);
+            }
+
+            if ($failure = $this->watcher->consumeFailure()) {
+                $failedRun = $this->markRunAsFinished($run, SmartSchedulerRun::STATUS_FAILED, $failure['message']);
+                $this->notifier->notifyFailure($failedRun, $failure['exception']);
+
+                return SchedulerRunOutcome::failure($failedRun, $failure['message'], $failure['exception']);
             }
 
             $completedRun = $this->markRunAsFinished($run, SmartSchedulerRun::STATUS_SUCCESS);
@@ -67,6 +76,7 @@ class SmartSchedulerManager
 
             return SchedulerRunOutcome::failure($failedRun, $exception->getMessage(), $exception);
         } finally {
+            $this->watcher->clear();
             if (isset($run) && $run->exists && $run->status === SmartSchedulerRun::STATUS_RUNNING) {
                 $this->markRunAsFinished($run, SmartSchedulerRun::STATUS_SUCCESS);
             }
