@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('smart_scheduler_runs')) {
+            return;
+        }
+
         Schema::create('smart_scheduler_runs', function (Blueprint $table) {
             // Use a string primary key so we can store ULID (26) or UUID (36)
             $table->string('id', 36)->primary();

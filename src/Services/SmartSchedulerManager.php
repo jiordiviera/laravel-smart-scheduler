@@ -71,10 +71,14 @@ class SmartSchedulerManager
 
             return SchedulerRunOutcome::success($completedRun);
         } catch (Throwable $exception) {
-            $failedRun = $this->markRunAsFinished($run, SmartSchedulerRun::STATUS_FAILED, $exception->getMessage());
-            $this->notifier->notifyFailure($failedRun, $exception);
+            $failure = $this->watcher->consumeFailure();
+            $message = $failure['message'] ?? $exception->getMessage();
+            $reportedException = $failure['exception'] ?? $exception;
 
-            return SchedulerRunOutcome::failure($failedRun, $exception->getMessage(), $exception);
+            $failedRun = $this->markRunAsFinished($run, SmartSchedulerRun::STATUS_FAILED, $message);
+            $this->notifier->notifyFailure($failedRun, $reportedException);
+
+            return SchedulerRunOutcome::failure($failedRun, $message, $reportedException);
         } finally {
             $this->watcher->clear();
             if (isset($run) && $run->exists && $run->status === SmartSchedulerRun::STATUS_RUNNING) {
