@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   package-tests:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ["8.3"]
+        php: [ '8.3' ]
 
     name: Package tests (PHP ${{ matrix.php }})
 
@@ -51,9 +51,9 @@ jobs:
       - name: Execute smart scheduler wrapper
         run: vendor/bin/testbench smart-schedule:run --env=testing
 
-      - name: Assert scheduler run persisted
-        run: |
-          vendor/bin/testbench tinker --execute="exit(\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() > 0 ? 0 : 1);"
+      # - name: Assert scheduler run persisted
+      #   run: |
+      #     vendor/bin/testbench tinker --execute="exit(\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() > 0 ? 0 : 1);"
 
       - name: Run tests
         run: composer test
@@ -64,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        laravel: ["10.*", "11.*", "12.*"]
+        laravel: [ '10.*', '11.*', '12.*' ]
 
     name: Integration (Laravel ${{ matrix.laravel }})
 
@@ -75,7 +75,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: '8.3'
           coverage: none
           extensions: mbstring, tokenizer, sqlite, pdo_sqlite
 
@@ -105,7 +105,7 @@ jobs:
         working-directory: test-app
         run: php artisan smart-schedule:run --env=testing
 
-      # - name: Assert scheduler run persisted
-      #   working-directory: test-app
-      #   run: |
-      #     php artisan tinker --env=testing --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() === 0) { echo 'No runs logged'; exit(1); }"
+      - name: Assert scheduler run persisted
+        working-directory: test-app
+        run: |
+          php artisan tinker --env=testing --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() === 0) { echo 'No runs logged'; exit(1); }"
