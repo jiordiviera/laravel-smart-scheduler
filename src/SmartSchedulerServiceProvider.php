@@ -42,15 +42,35 @@ class SmartSchedulerServiceProvider extends ServiceProvider
             // Load package migrations so host apps can migrate the runs table
             $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
-            // Publish configuration
-            $this->publishes([
-                __DIR__.'/../config/smart-scheduler.php' => config_path('smart-scheduler.php'),
-            ], 'config');
+            $this->publishAssets();
 
             // Register package commands (command classes are provided in the package)
             $this->commands([
                 Commands\SmartScheduleRunCommand::class,
             ]);
         }
+    }
+
+    protected function publishAssets(): void
+    {
+        $configPath = __DIR__.'/../config/smart-scheduler.php';
+        $this->publishes([
+            $configPath => config_path('smart-scheduler.php'),
+        ], 'config');
+        $this->publishes([
+            $configPath => config_path('smart-scheduler.php'),
+        ], 'smart-scheduler-config');
+
+        $migrationSource = __DIR__.'/../database/migrations/2025_10_29_000000_create_smart_scheduler_runs_table.php';
+        $timestamp = date('Y_m_d_His');
+        $targetMigration = database_path("migrations/{$timestamp}_create_smart_scheduler_runs_table.php");
+
+        $this->publishes([
+            $migrationSource => $targetMigration,
+        ], 'migrations');
+
+        $this->publishes([
+            $migrationSource => $targetMigration,
+        ], 'smart-scheduler-migrations');
     }
 }
