@@ -108,4 +108,4 @@ jobs:
       - name: Assert scheduler run persisted
         working-directory: test-app
         run: |
-          php artisan tinker --env=testing --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() === 0) exit(1);"
+          php artisan tinker --env=testing --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() === 0) { echo 'No runs logged'; exit(1); }"
