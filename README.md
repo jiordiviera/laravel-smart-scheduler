@@ -33,10 +33,12 @@ Laravel Smart Scheduler wraps Laravel’s native `schedule:run` command with gua
 2. Publish configuration and migrations, then migrate:
 
    ```bash
-   php artisan vendor:publish --provider="JiordiViera\\SmartScheduler\\SmartSchedulerServiceProvider" --tag=config
-   php artisan vendor:publish --provider="JiordiViera\\SmartScheduler\\SmartSchedulerServiceProvider" --tag=migrations
+   php artisan vendor:publish --provider="JiordiViera\\SmartScheduler\\LaravelSmartScheduler\\SmartSchedulerServiceProvider" --tag=config
+   php artisan vendor:publish --provider="JiordiViera\\SmartScheduler\\LaravelSmartScheduler\\SmartSchedulerServiceProvider" --tag=migrations
    php artisan migrate
    ```
+
+   > ⛏️ The migrations create the `smart_scheduler_runs` table used by the wrapper. If you skip this step, `smart-schedule:run` exits with a clear error so you know to migrate first.
 
 ---
 

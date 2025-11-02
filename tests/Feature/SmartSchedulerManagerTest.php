@@ -137,6 +137,21 @@ it('marks an overdue run as stuck and triggers notifier', function () {
     expect($notifier->lastException)->not->toBeNull();
 });
 
+it('fails with a helpful message when migrations are missing', function () {
+    Schema::dropIfExists('smart_scheduler_runs');
+
+    config()->set('smart-scheduler.wrapped_command', 'smart-scheduler:success-run');
+
+    /** @var SmartSchedulerManager $manager */
+    $manager = app(SmartSchedulerManager::class);
+
+    $outcome = $manager->execute();
+
+    expect($outcome->status())->toBe(SchedulerRunOutcome::STATUS_NATIVE);
+    expect($outcome->exitCode())->toBe(Command::FAILURE);
+    expect($outcome->message())->toContain('migrations');
+});
+
 it('persists runs using the configured database connection', function () {
     config()->set('database.connections.scheduler_logs', [
         'driver' => 'sqlite',

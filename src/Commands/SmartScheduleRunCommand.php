@@ -44,7 +44,11 @@ class SmartScheduleRunCommand extends Command
         switch ($outcome->status()) {
             case SchedulerRunOutcome::STATUS_NATIVE:
                 if ($message) {
-                    $this->line($message);
+                    if ($outcome->exitCode() === Command::SUCCESS) {
+                        $this->line($message);
+                    } else {
+                        $this->error($message);
+                    }
                 }
                 break;
 

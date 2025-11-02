@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Exceptions\SchedulerRunExecutionException;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Exceptions\SchedulerRunSkippedException;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Exceptions\SchedulerRunStuckException;
@@ -29,6 +30,13 @@ class SmartSchedulerManager
             $exitCode = Artisan::call($wrappedCommand);
 
             return SchedulerRunOutcome::native($exitCode, $message);
+        }
+
+        if (!$this->ensureRunTableExists()) {
+            $message = 'Smart Scheduler migrations are missing. Run `php artisan vendor:publish --tag=migrations` '
+                .'and `php artisan migrate` before invoking smart-schedule:run.';
+
+            return SchedulerRunOutcome::native(Command::FAILURE, $message);
         }
 
         $activeRun = $this->getActiveRun($wrappedCommand);
@@ -63,6 +71,14 @@ class SmartSchedulerManager
                 $this->markRunAsFinished($run, SmartSchedulerRun::STATUS_SUCCESS);
             }
         }
+    }
+
+    protected function ensureRunTableExists(): bool
+    {
+        $model = new SmartSchedulerRun();
+        $connection = $model->getConnectionName() ?: config('database.default');
+
+        return Schema::connection($connection)->hasTable($model->getTable());
     }
 
     protected function handleStuckRun(SmartSchedulerRun $activeRun): SchedulerRunOutcome
