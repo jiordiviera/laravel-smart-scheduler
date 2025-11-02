@@ -7,57 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  package-tests:
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        php: [ '8.3' ]
-
-    name: Package tests (PHP ${{ matrix.php }})
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          coverage: none
-          extensions: mbstring, tokenizer, sqlite, pdo_sqlite
-
-      - name: Install dependencies
-        run: |
-          composer update \
-            --prefer-dist \
-            --no-progress \
-            --no-interaction \
-            --with-all-dependencies
-
-      - name: Prepare SQLite database
-        run: |
-          touch tests/database.sqlite
-          cat <<EOF > .env.testing
-          APP_ENV=testing
-          DB_CONNECTION=sqlite
-          DB_DATABASE=$(pwd)/tests/database.sqlite
-          EOF
-
-      - name: Run migrations (Testbench)
-        run: vendor/bin/testbench migrate --database=sqlite --path=database/migrations --realpath --env=testing
-
-      - name: Execute smart scheduler wrapper
-        run: vendor/bin/testbench smart-schedule:run --env=testing
-
-      # - name: Assert scheduler run persisted
-      #   run: |
-      #     vendor/bin/testbench tinker --execute="exit(\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() > 0 ? 0 : 1);"
-
-      - name: Run tests
-        run: composer test
-
+  
   integration:
     runs-on: ubuntu-latest
 
