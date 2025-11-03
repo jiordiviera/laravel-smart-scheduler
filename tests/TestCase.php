@@ -24,4 +24,10 @@ class TestCase extends Orchestra
             'prefix' => '',
         ]);
     }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        // Run package migrations
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
 }
