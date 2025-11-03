@@ -51,7 +51,8 @@ jobs:
           php artisan vendor:publish --tag=smart-scheduler-migrations --force
           php artisan migrate --force
 
-      - name: Create test scheduled task
+      - name: Create test scheduled task (Laravel 11+)
+        if: matrix.laravel != '10.*'
         working-directory: test-app
         run: |
           cat >> routes/console.php << 'EOF'
@@ -62,6 +63,20 @@ jobs:
               logger('Test task executed');
           })->everyMinute()->name('test-task');
           EOF
+
+      - name: Create test scheduled task (Laravel 10)
+        if: matrix.laravel == '10.*'
+        working-directory: test-app
+        run: |
+          php -r "
+          \$kernel = file_get_contents('app/Console/Kernel.php');
+          \$kernel = str_replace(
+              'protected function schedule(Schedule \$schedule): void\n    {',
+              'protected function schedule(Schedule \$schedule): void\n    {\n        \$schedule->call(function () {\n            logger(\'Test task executed\');\n        })->everyMinute()->name(\'test-task\');',
+              \$kernel
+          );
+          file_put_contents('app/Console/Kernel.php', \$kernel);
+          "
 
       - name: Run Laravel scheduler
         working-directory: test-app
