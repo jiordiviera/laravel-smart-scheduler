@@ -13,7 +13,7 @@ A Laravel package for intelligent scheduled task management with observability a
 ## Requirements
 
 - PHP 8.2+
-- Laravel 10.x, 11.x, or 12.x
+- Laravel 11.x or 12.x
 
 ## Installation
 
@@ -61,14 +61,13 @@ SMART_SCHEDULER_EMAIL_RECIPIENTS=admin@example.com,ops@example.com
 
 ## Usage
 
-The package automatically tracks all scheduled tasks defined in your `app/Console/Kernel.php`:
+The package automatically tracks all scheduled tasks defined in `routes/console.php`:
 
 ```php
-protected function schedule(Schedule $schedule)
-{
-    $schedule->command('backup:run')->daily();
-    $schedule->command('reports:generate')->hourly();
-}
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('backup:run')->daily();
+Schedule::command('reports:generate')->hourly();
 ```
 
 ### Viewing Execution History
