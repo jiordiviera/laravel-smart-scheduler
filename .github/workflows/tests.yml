@@ -78,11 +78,31 @@ jobs:
           file_put_contents('app/Console/Kernel.php', \$kernel);
           "
 
+      - name: Verify package is loaded
+        working-directory: test-app
+        run: |
+          php artisan package:discover
+          php artisan config:clear
+          php artisan event:list | grep -i scheduled || echo "No scheduled events found"
+
+      - name: Check database tables
+        working-directory: test-app
+        run: |
+          php artisan tinker --execute="echo 'Tables: ' . implode(', ', \Illuminate\Support\Facades\Schema::getTableNames());"
+
       - name: Run Laravel scheduler
         working-directory: test-app
-        run: php artisan schedule:run
+        run: php artisan schedule:run -v
 
       - name: Assert scheduler run persisted
         working-directory: test-app
         run: |
-          php artisan tinker --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\ScheduleRun::count() === 0) { echo 'No runs logged'; exit(1); }"
+          php artisan tinker --execute="
+          \$count = \Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\ScheduleRun::count();
+          echo 'ScheduleRun count: ' . \$count . PHP_EOL;
+          if (\$count === 0) {
+            echo 'ERROR: No runs logged' . PHP_EOL;
+            exit(1);
+          }
+          echo 'SUCCESS: Runs were logged' . PHP_EOL;
+          "
