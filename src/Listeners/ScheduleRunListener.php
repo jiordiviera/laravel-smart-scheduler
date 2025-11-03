@@ -35,7 +35,7 @@ class ScheduleRunListener
         // If task was ignored due to overlap, prevent execution
         if ($run && $run->isIgnored()) {
             // Mark task to skip execution (Laravel's internal mechanism)
-            $event->task->skip();
+            $event->task->skip(fn () => true);
         }
     }
 
