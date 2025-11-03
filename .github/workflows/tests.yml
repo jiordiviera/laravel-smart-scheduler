@@ -41,20 +41,33 @@ jobs:
       - name: Link local package
         working-directory: test-app
         run: |
-          composer require jiordiviera/laravel-smart-scheduler --dev --no-interaction --no-progress
+          composer config repositories.local '{"type": "path", "url": "../"}' --file composer.json
+          composer require jiordiviera/laravel-smart-scheduler:@dev --no-interaction --no-progress
 
       - name: Publish assets and migrate
         working-directory: test-app
         run: |
-          php artisan vendor:publish --provider="Jiordiviera\SmartScheduler\LaravelSmartScheduler\SmartSchedulerServiceProvider" --tag=config --force
-          php artisan vendor:publish --provider="Jiordiviera\SmartScheduler\LaravelSmartScheduler\SmartSchedulerServiceProvider" --tag=migrations --force
+          php artisan vendor:publish --tag=smart-scheduler-config --force
+          php artisan vendor:publish --tag=smart-scheduler-migrations --force
           php artisan migrate --force
 
-      - name: Run smart scheduler command
+      - name: Create test scheduled task
         working-directory: test-app
-        run: php artisan smart-schedule:run --env=testing
+        run: |
+          cat >> routes/console.php << 'EOF'
+
+          use Illuminate\Support\Facades\Schedule;
+
+          Schedule::call(function () {
+              logger('Test task executed');
+          })->everyMinute()->name('test-task');
+          EOF
+
+      - name: Run Laravel scheduler
+        working-directory: test-app
+        run: php artisan schedule:run
 
       - name: Assert scheduler run persisted
         working-directory: test-app
         run: |
-          php artisan tinker --env=testing --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\SmartSchedulerRun::count() === 0) { echo 'No runs logged'; exit(1); }"
+          php artisan tinker --execute="if (\Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\ScheduleRun::count() === 0) { echo 'No runs logged'; exit(1); }"
