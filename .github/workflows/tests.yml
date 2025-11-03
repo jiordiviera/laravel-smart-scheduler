@@ -41,8 +41,7 @@ jobs:
       - name: Link local package
         working-directory: test-app
         run: |
-          composer config repositories.smart-scheduler '{"type":"path","url":"../"}'
-          composer require jiordiviera/laravel-smart-scheduler:* --dev --no-interaction --no-progress
+          composer require jiordiviera/laravel-smart-scheduler --dev --no-interaction --no-progress
 
       - name: Publish assets and migrate
         working-directory: test-app
