@@ -59,9 +59,7 @@ jobs:
 
           use Illuminate\Support\Facades\Schedule;
 
-          Schedule::call(function () {
-              logger('Test task executed');
-          })->everyMinute()->name('test-task');
+          Schedule::command('inspire')->cron('* * * * *')->name('test-inspire');
           EOF
 
       - name: Create test scheduled task (Laravel 10)
@@ -72,7 +70,7 @@ jobs:
           \$kernel = file_get_contents('app/Console/Kernel.php');
           \$kernel = str_replace(
               'protected function schedule(Schedule \$schedule): void\n    {',
-              'protected function schedule(Schedule \$schedule): void\n    {\n        \$schedule->call(function () {\n            logger(\'Test task executed\');\n        })->everyMinute()->name(\'test-task\');',
+              'protected function schedule(Schedule \$schedule): void\n    {\n        \$schedule->command(\'inspire\')->cron(\'* * * * *\')->name(\'test-inspire\');',
               \$kernel
           );
           file_put_contents('app/Console/Kernel.php', \$kernel);
