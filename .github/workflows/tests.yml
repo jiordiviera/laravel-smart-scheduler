@@ -81,7 +81,15 @@ jobs:
         run: |
           php artisan package:discover
           php artisan config:clear
-          php artisan event:list | grep -i scheduled || echo "No scheduled events found"
+          php artisan event:list | grep -i "ScheduledTask" || echo "No ScheduledTask events found"
+          echo "---"
+          php artisan tinker --execute="
+          \$listeners = app('events')->getListeners('Illuminate\\\Console\\\Events\\\ScheduledTaskStarting');
+          echo 'ScheduledTaskStarting listeners: ' . count(\$listeners) . PHP_EOL;
+          foreach (\$listeners as \$listener) {
+            echo '  - ' . (is_string(\$listener) ? \$listener : get_class(\$listener)) . PHP_EOL;
+          }
+          "
 
       - name: Check database tables
         working-directory: test-app
@@ -90,7 +98,7 @@ jobs:
 
       - name: Run Laravel scheduler
         working-directory: test-app
-        run: php artisan schedule:run -v
+        run: php artisan schedule:run -vvv
 
       - name: Assert scheduler run persisted
         working-directory: test-app
