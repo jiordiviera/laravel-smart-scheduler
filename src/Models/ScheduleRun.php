@@ -32,6 +32,8 @@ class ScheduleRun extends Model
 
     public const STATUS_IGNORED = 'ignored';
 
+    public const STATUS_STUCK = 'stuck';
+
     /**
      * Table name.
      *
@@ -96,5 +98,13 @@ class ScheduleRun extends Model
     public function isIgnored(): bool
     {
         return $this->status === self::STATUS_IGNORED;
+    }
+
+    /**
+     * Check if the execution is stuck.
+     */
+    public function isStuck(): bool
+    {
+        return $this->status === self::STATUS_STUCK;
     }
 }

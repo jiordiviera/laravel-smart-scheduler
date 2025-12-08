@@ -4,6 +4,7 @@ namespace Jiordiviera\SmartScheduler\LaravelSmartScheduler;
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Console\Commands\DetectStuckTasksCommand;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Console\Commands\PurgeScheduleRunsCommand;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Contracts\SmartNotifierInterface;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Listeners\ScheduleRunListener;
@@ -62,6 +63,7 @@ class SmartSchedulerServiceProvider extends ServiceProvider
             // Register commands
             $this->commands([
                 PurgeScheduleRunsCommand::class,
+                DetectStuckTasksCommand::class,
             ]);
         }
 

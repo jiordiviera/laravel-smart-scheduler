@@ -6,10 +6,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Mail;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Contracts\SmartNotifierInterface;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Mail\TaskFailedMail;
+use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Mail\TaskStuckMail;
 use Jiordiviera\SmartScheduler\LaravelSmartScheduler\Models\ScheduleRun;
 
 /**
- * Email notification handler for failed task executions.
+ * Email notification handler for failed and stuck task executions.
  *
  * Sends asynchronous email notifications to configured recipients.
  */
@@ -27,5 +28,19 @@ class EmailNotifier implements ShouldQueue, SmartNotifierInterface
         }
 
         Mail::to($recipients)->queue(new TaskFailedMail($run));
+    }
+
+    /**
+     * Send stuck task notification via email.
+     */
+    public function sendStuckNotification(ScheduleRun $run): void
+    {
+        $recipients = config('smart-scheduler.notifications.email.recipients', []);
+
+        if (empty($recipients)) {
+            return;
+        }
+
+        Mail::to($recipients)->queue(new TaskStuckMail($run));
     }
 }
