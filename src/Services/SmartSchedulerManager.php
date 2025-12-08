@@ -21,6 +21,7 @@ class SmartSchedulerManager
      * Handle task starting event.
      *
      * Checks for overlapping executions and either blocks or records the new execution.
+     * Tasks marked as stuck are not considered as blocking.
      *
      * @return ScheduleRun|null Returns null if task is ignored due to overlap
      */
@@ -28,7 +29,10 @@ class SmartSchedulerManager
     {
         $taskIdentifier = $this->getTaskIdentifier($event);
 
-        // Check for existing running task
+        // Auto-detect stuck tasks before checking for overlap
+        $this->markStuckTasks($taskIdentifier);
+
+        // Check for existing running task (only STATUS_STARTING, not stuck)
         $existingRun = ScheduleRun::query()
             ->where('task_identifier', $taskIdentifier)
             ->where('status', ScheduleRun::STATUS_STARTING)
@@ -151,5 +155,27 @@ class SmartSchedulerManager
         }
 
         return 'Task exited with non-zero status code: '.$event->task->exitCode;
+    }
+
+    /**
+     * Mark stuck tasks for a specific task identifier.
+     *
+     * Tasks in "starting" status older than the configured timeout are marked as stuck.
+     * This allows new executions to proceed instead of being blocked indefinitely.
+     */
+    protected function markStuckTasks(string $taskIdentifier): int
+    {
+        $timeoutMinutes = config('smart-scheduler.stuck_timeout_minutes', 60);
+        $cutoffTime = Carbon::now()->subMinutes($timeoutMinutes);
+
+        return ScheduleRun::query()
+            ->where('task_identifier', $taskIdentifier)
+            ->where('status', ScheduleRun::STATUS_STARTING)
+            ->where('started_at', '<', $cutoffTime)
+            ->update([
+                'status' => ScheduleRun::STATUS_STUCK,
+                'finished_at' => Carbon::now(),
+                'exception' => "Task automatically marked as stuck after {$timeoutMinutes} minutes",
+            ]);
     }
 }
