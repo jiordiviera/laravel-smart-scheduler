@@ -1,0 +1,79 @@
+name: Auto Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release:major') || contains(github.event.pull_request.labels.*.name, 'release:minor') || contains(github.event.pull_request.labels.*.name, 'release:patch'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Calculate new version
+        id: new_version
+        run: |
+          LATEST="${{ steps.get_tag.outputs.latest_tag }}"
+          LATEST="${LATEST#v}"
+          
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
+          
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'release:major') }}" == "true" ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'release:minor') }}" == "true" ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+          
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Extract release notes from CHANGELOG
+        id: changelog
+        uses: ffurrer2/extract-release-notes@v2
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.new_version.outputs.new_version }}
+          git push origin ${{ steps.new_version.outputs.new_version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.new_version.outputs.new_version }}
+          name: ${{ steps.new_version.outputs.new_version }}
+          body: |
+            ## What's Changed
+            
+            ${{ github.event.pull_request.body }}
+            
+            ---
+            
+            ${{ steps.changelog.outputs.release_notes }}
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
